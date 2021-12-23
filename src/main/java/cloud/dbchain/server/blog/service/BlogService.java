@@ -116,7 +116,7 @@ public class BlogService {
             String blog_id = discussTable.getBlog_id();
             String discuss_id = discussTable.getDiscuss_id();
             String text = discussTable.getText();
-            UserTable user = userTableService.getUser(discussTable.getCreated_by());
+            UserTable user = userTableService.getUser(privateKey, publicKey, discussTable.getCreated_by());
             if (user != null) {
                 String authorName = user.getName();
                 String authorPhoto = user.getPhoto();
@@ -135,7 +135,7 @@ public class BlogService {
                 commentList.add(discussBundle);
             } else {
                 DiscussResponse discussResponse = discussMap.get(response.getDiscuss_id());
-                UserTable user = userTableService.getUser(discussResponse.getAuthorAddress());
+                UserTable user = userTableService.getUser(privateKey, publicKey, discussResponse.getAuthorAddress());
                 response.setRepliedName(user.getName());
                 response.setRepliedPhoto(user.getPhoto());
                 DiscussBundle discussBundle = new DiscussBundle(response, null);

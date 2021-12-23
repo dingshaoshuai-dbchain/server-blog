@@ -18,7 +18,7 @@ import static cloud.dbchain.server.blog.contast.CodeKt.CODE_FAILURE;
 @RestController
 @RequestMapping("/blog")
 public class BlogController {
-    private BlogService blogService;
+    private final BlogService blogService;
 
     public BlogController(@Autowired BlogService blogService) {
         this.blogService = blogService;
@@ -33,7 +33,6 @@ public class BlogController {
      * 发布博客
      *
      * @param map title,body,img
-     * @return
      */
     @PostMapping("/publish")
     public BaseResponse publishBlog(HttpSession session, @RequestBody Map<String, String> map) {
@@ -55,7 +54,7 @@ public class BlogController {
      * 评论博客
      *
      * @param map blog_id,discuss_id,text
-     * @return
+     * @return 评论结果
      */
     @PostMapping("/discuss")
     public BaseResponse discuss(HttpSession session, @RequestBody Map<String, String> map) {
@@ -77,7 +76,7 @@ public class BlogController {
      * 根据条件获取博客
      *
      * @param map title,created_by
-     * @return
+     * @return 博客列表
      */
     @PostMapping("/getBlogs")
     public BaseResponse getBlogs(@RequestBody Map<String, String> map) {
@@ -88,8 +87,9 @@ public class BlogController {
 
     /**
      * 根据 id 查询博客
-     * @param id
-     * @return
+     *
+     * @param id 博客 id
+     * @return 博客
      */
     @GetMapping("/getBlog/{id}")
     public BaseResponse getBlog(@PathVariable("id") String id) {
@@ -98,8 +98,9 @@ public class BlogController {
 
     /**
      * 查询博客详情
-     * @param blogId
-     * @return
+     *
+     * @param blogId 博客 id
+     * @return 博客
      */
     @GetMapping("/getBlogDetail/{blog_id}")
     public BaseResponse getBlogDetail(@PathVariable("blog_id") String blogId) {

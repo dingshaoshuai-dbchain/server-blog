@@ -45,8 +45,9 @@ public class UserController {
     }
 
     /**
+     * 注册
      * @param map userName,password
-     * @return
+     * @return 注册结果
      */
     @PostMapping("/register")
     public BaseResponse register(@RequestBody Map<String, String> map) {
@@ -99,9 +100,10 @@ public class UserController {
     }
 
     /**
-     * @param request
+     * 登录
+     * @param request request
      * @param map     userName,password
-     * @return
+     * @return 登录结果
      */
     @PostMapping("/login")
     public BaseResponse login(HttpServletRequest request, @RequestBody Map<String, String> map) {
@@ -137,9 +139,10 @@ public class UserController {
     }
 
     /**
-     * @param request
+     * 保存恢复码
+     * @param request request
      * @param recoverWord recoverWord
-     * @return
+     * @return 保存恢复码结果
      */
     @PostMapping("/saveRecoverWord")
     public BaseResponse saveRecoverWord(HttpServletRequest request, @RequestBody String recoverWord) {
@@ -165,8 +168,9 @@ public class UserController {
     }
 
     /**
+     * 重置密码 - 从恢复码
      * @param map userName,recoverWord,newPassword
-     * @return
+     * @return 重置密码结果
      */
     @PostMapping("/resetPasswordFromRecoverWord")
     public BaseResponse resetPasswordFromRecoverWord(@RequestBody Map<String, String> map) {
@@ -189,9 +193,10 @@ public class UserController {
     }
 
     /**
-     * @param request
+     * 重置密码 - 从老密码
+     * @param request request
      * @param map     oldPassword,newPassword
-     * @return
+     * @return 重置密码结果
      */
     @PostMapping("/resetPasswordFromOld")
     public BaseResponse resetPasswordFromOld(HttpServletRequest request, @RequestBody Map<String, String> map) {

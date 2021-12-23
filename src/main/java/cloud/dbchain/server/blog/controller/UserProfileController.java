@@ -26,9 +26,10 @@ public class UserProfileController {
     }
 
     /**
-     * @param session
-     * @param map     name,age,sex,status,photo,motto
-     * @return
+     * 修改用户信息
+     * @param session session
+     * @param map name,age,sex,status,photo,motto
+     * @return 修改用户信息结果
      */
     @PostMapping("/modify")
     public BaseResponse modify(HttpSession session, @RequestBody Map<String, String> map) {
