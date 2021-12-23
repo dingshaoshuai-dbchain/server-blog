@@ -5,14 +5,16 @@ import cloud.dbchain.server.blog.BaseResponse;
 import cloud.dbchain.server.blog.bean.DiscussBundle;
 import cloud.dbchain.server.blog.bean.response.BlogDetail;
 import cloud.dbchain.server.blog.bean.response.DiscussResponse;
+import cloud.dbchain.server.blog.contast.Blogs;
 import cloud.dbchain.server.blog.contast.CodeKt;
+import cloud.dbchain.server.blog.contast.Common;
 import cloud.dbchain.server.blog.contast.Discuss;
-import cloud.dbchain.server.blog.dao.BlogDao;
 import cloud.dbchain.server.blog.dao.TableDao;
 import cloud.dbchain.server.blog.table.BlogTable;
 import cloud.dbchain.server.blog.table.DiscussTable;
 import cloud.dbchain.server.blog.table.UserTable;
 import cloud.dbchain.server.blog.util.ResponseUtil;
+import com.gcigb.dbchain.QueriedArray;
 import com.gcigb.dbchain.bean.result.DBChainQueryResult;
 import com.gcigb.network.util.LogKt;
 import com.google.gson.Gson;
@@ -30,33 +32,42 @@ import java.util.Map;
 @Component
 public class BlogService {
 
-    private BlogDao dao;
     private UserTableService userTableService;
     private TableDao tableDao;
 
-    public BlogService(@Autowired BlogDao dao, @Autowired UserTableService userTableService, @Autowired TableDao tableDao) {
-        this.dao = dao;
+    public BlogService(@Autowired UserTableService userTableService, @Autowired TableDao tableDao) {
         this.userTableService = userTableService;
         this.tableDao = tableDao;
     }
 
     public BaseResponse getAll(byte[] privateKey, byte[] publicKey) {
-        DBChainQueryResult result = dao.getAll(privateKey, publicKey);
+        QueriedArray queriedArray = new QueriedArray("table", Blogs.tableName);
+        DBChainQueryResult result = tableDao.query(privateKey, publicKey, queriedArray);
         return ResponseUtil.generateResponse(result);
     }
 
     public BaseResponse getBlogs(byte[] privateKey, byte[] publicKey, String title, String createdBy) {
-        DBChainQueryResult blogs = dao.getBlogs(privateKey, publicKey, title, createdBy);
+        QueriedArray queriedArray = new QueriedArray("table", Blogs.tableName);
+        if (title != null && title.length() > 0) {
+            queriedArray.findEqual(Blogs.title, title);
+        }
+        if (createdBy != null && createdBy.length() > 0) {
+            queriedArray.findEqual(Common.created_by, createdBy);
+        }
+        DBChainQueryResult blogs = tableDao.query(privateKey, publicKey, queriedArray);
         return ResponseUtil.generateResponse(blogs);
     }
 
     public BaseResponse getBlog(byte[] privateKey, byte[] publicKey, String id) {
-        DBChainQueryResult blogs = dao.getBlog(privateKey, publicKey, id);
+        QueriedArray queriedArray = new QueriedArray("table", Blogs.tableName)
+                .findById(id);
+        DBChainQueryResult blogs = tableDao.query(privateKey, publicKey, queriedArray);
         return ResponseUtil.generateResponse(blogs);
     }
 
     public BaseResponse publish(byte[] privateKey, byte[] publicKey, String address, Map<String, String> map) {
-        boolean insertRow = dao.insert(privateKey, publicKey, address, map);
+        boolean insertRow = tableDao.inertRow(privateKey, publicKey, address, Blogs.tableName, map);
+        ;
         if (insertRow) {
             return new BaseResponse(CodeKt.CODE_SUCCESS, "发布成功", null);
         } else {
@@ -76,7 +87,9 @@ public class BlogService {
     public BlogDetail getBlogDetail(byte[] privateKey, byte[] publicKey, String blogId) {
         Gson gson = new Gson();
         // 获取博客内容
-        String content = dao.getBlog(privateKey, publicKey, blogId).getContent();
+        QueriedArray queriedArray = new QueriedArray("table", Blogs.tableName)
+                .findById(blogId);
+        String content = tableDao.query(privateKey, publicKey, queriedArray).getContent();
         Type type = new TypeToken<BaseDBChainResult<BlogTable>>() {
         }.getType();
         BaseDBChainResult<BlogTable> blogTableResult = gson.fromJson(content, type);
@@ -87,7 +100,9 @@ public class BlogService {
         BlogTable blogTable = result.get(0);
 
         // 查出关于这条博客的所有评论及回复
-        content = dao.getBlogDiscuss(privateKey, publicKey, blogId).getContent();
+        queriedArray = new QueriedArray("table", Discuss.tableName)
+                .findEqual(Discuss.blog_id, blogId);
+        content = tableDao.query(privateKey, publicKey, queriedArray).getContent();
         LogKt.logI("content: " + content);
         type = new TypeToken<BaseDBChainResult<DiscussTable>>() {
         }.getType();
@@ -102,7 +117,7 @@ public class BlogService {
             String discuss_id = discussTable.getDiscuss_id();
             String text = discussTable.getText();
             UserTable user = userTableService.getUser(discussTable.getCreated_by());
-            if (user!=null){
+            if (user != null) {
                 String authorName = user.getName();
                 String authorPhoto = user.getPhoto();
                 String address = user.getDbchain_key();
