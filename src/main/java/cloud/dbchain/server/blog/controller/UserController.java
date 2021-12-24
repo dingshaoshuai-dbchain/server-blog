@@ -140,21 +140,13 @@ public class UserController {
 
     /**
      * 保存恢复码
-     * @param request request
+     * @param session session
      * @param recoverWord recoverWord
      * @return 保存恢复码结果
      */
     @PostMapping("/saveRecoverWord")
-    public BaseResponse saveRecoverWord(HttpServletRequest request, @RequestBody String recoverWord) {
-        // 判断是否登录状态
-        HttpSession session = request.getSession();
-        if (session.isNew()) {
-            return new BaseResponse(CODE_FAILURE, "请先登录", null);
-        }
+    public BaseResponse saveRecoverWord(HttpSession session, @RequestBody String recoverWord) {
         UserInfo userInfo = (UserInfo) session.getAttribute(session.getId());
-        if (userInfo == null || userInfo.getPrivateKey().length <= 0) {
-            return new BaseResponse(CODE_FAILURE, "请先登录", null);
-        }
         // 保存恢复码
         boolean result = keyEscrowService.savePrivateKeyWithRecoverWord(
                 userInfo.getUserName(),
@@ -194,21 +186,13 @@ public class UserController {
 
     /**
      * 重置密码 - 从老密码
-     * @param request request
+     * @param session session
      * @param map     oldPassword,newPassword
      * @return 重置密码结果
      */
     @PostMapping("/resetPasswordFromOld")
-    public BaseResponse resetPasswordFromOld(HttpServletRequest request, @RequestBody Map<String, String> map) {
-        // 判断是否登录状态
-        HttpSession session = request.getSession();
-        if (session.isNew()) {
-            return new BaseResponse(CODE_FAILURE, "请先登录", null);
-        }
+    public BaseResponse resetPasswordFromOld(HttpSession session, @RequestBody Map<String, String> map) {
         UserInfo userInfo = (UserInfo) session.getAttribute(session.getId());
-        if (userInfo == null || userInfo.getPrivateKey().length <= 0) {
-            return new BaseResponse(CODE_FAILURE, "请先登录", null);
-        }
         // 参数判空
         String userName = userInfo.getUserName();
         String oldPassword = map.get("oldPassword");
