@@ -21,7 +21,7 @@ import java.util.Map;
 @Component
 public class UserTableService {
 
-    private TableDao tableDao;
+    private final TableDao tableDao;
 
     public UserTableService(@Autowired TableDao tableDao) {
         this.tableDao = tableDao;

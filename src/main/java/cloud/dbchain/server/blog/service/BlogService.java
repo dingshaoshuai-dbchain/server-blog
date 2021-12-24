@@ -86,30 +86,29 @@ public class BlogService {
 
     public BaseResponse publish(byte[] privateKey, byte[] publicKey, String address, Map<String, String> map) {
         boolean insertRow = tableDao.inertRow(privateKey, publicKey, address, Blogs.tableName, map);
-        if (insertRow) {
-            return new BaseResponse(CodeKt.CODE_SUCCESS, "发布成功", null);
-        } else {
+        if (!insertRow) {
             return new BaseResponse(CodeKt.CODE_FAILURE, "发布失败", null);
         }
+        return new BaseResponse(CodeKt.CODE_SUCCESS, "发布成功", null);
     }
 
     public BaseResponse discuss(byte[] privateKey, byte[] publicKey, String address, Map<String, String> map) {
         boolean insertRow = tableDao.inertRow(privateKey, publicKey, address, Discuss.tableName, map);
-        if (insertRow) {
-            return new BaseResponse(CodeKt.CODE_SUCCESS, "评论成功", null);
-        } else {
+        if (!insertRow) {
             return new BaseResponse(CodeKt.CODE_FAILURE, "评论失败", null);
         }
+        return new BaseResponse(CodeKt.CODE_SUCCESS, "评论成功", null);
+
     }
 
     public BlogDetail getBlogDetail(byte[] privateKey, byte[] publicKey, String blogId) {
-        Gson gson = new Gson();
         // 获取博客内容
         QueriedArray queriedArray = new QueriedArray("table", Blogs.tableName)
                 .findById(blogId);
         String content = tableDao.query(privateKey, publicKey, queriedArray).getContent();
         Type type = new TypeToken<BaseDBChainResult<BlogTable>>() {
         }.getType();
+        Gson gson = new Gson();
         BaseDBChainResult<BlogTable> blogTableResult = gson.fromJson(content, type);
         List<BlogTable> result = blogTableResult.getResult();
         if (result.isEmpty()) {
@@ -133,53 +132,52 @@ public class BlogService {
             String blog_id = discussTable.getBlog_id();
             String discuss_id = discussTable.getDiscuss_id();
             String text = discussTable.getText();
+            String authorName = null;
+            String authorPhoto = null;
+            String address = null;
             UserTable user = userTableService.getUser(privateKey, publicKey, discussTable.getCreated_by());
             if (user != null) {
-                String authorName = user.getName();
-                String authorPhoto = user.getPhoto();
-                String address = user.getDbchain_key();
-                DiscussResponse discussResponse = new DiscussResponse(id, blog_id, discuss_id, text, authorName, authorPhoto, address, null, null);
-                discussMap.put(discussResponse.getId(), discussResponse);
-                responseList.add(discussResponse);
+                authorName = user.getName();
+                authorPhoto = user.getPhoto();
+                address = user.getDbchain_key();
             }
+            DiscussResponse discussResponse = new DiscussResponse(id, blog_id, discuss_id, text, authorName, authorPhoto, address, null, null);
+            discussMap.put(discussResponse.getId(), discussResponse);
+            responseList.add(discussResponse);
         }
-
+        // 组装最终结果
         List<DiscussBundle> commentList = new ArrayList<>();
-        Map<String, List<DiscussBundle>> repliedMap = new HashMap<>();
+        Map<String, DiscussBundle> discussBundleMap = new HashMap<>();
         for (DiscussResponse response : responseList) {
-            if (StringUtils.isNullOrEmpty(response.getDiscuss_id())) {
+            String discuss_id = response.getDiscuss_id();
+            // 如果 discuss_id 为空，则代表评论的博客（不是回复别人的评论），放在最外层
+            if (StringUtils.isNullOrEmpty(discuss_id)) {
                 DiscussBundle discussBundle = new DiscussBundle(response, null);
+                discussBundleMap.put(response.getId(), discussBundle);
                 commentList.add(discussBundle);
             } else {
-                DiscussResponse discussResponse = discussMap.get(response.getDiscuss_id());
+                // 表示回复别人
+                // 获取到被回复的评论
+                DiscussResponse discussResponse = discussMap.get(discuss_id);
+                // 获取到被回复的人
                 UserTable user = userTableService.getUser(privateKey, publicKey, discussResponse.getAuthorAddress());
+                // 设置回复的人的昵称和头像
                 response.setRepliedName(user.getName());
                 response.setRepliedPhoto(user.getPhoto());
+                // 为该评论保存它相关的所有回复
                 DiscussBundle discussBundle = new DiscussBundle(response, null);
-                List<DiscussBundle> list = repliedMap.get(response.getDiscuss_id());
+                // 回复也有可能是别人的根
+                discussBundleMap.put(response.getId(), discussBundle);
+                DiscussBundle rootDiscussBundle = discussBundleMap.get(discuss_id);
+                if (rootDiscussBundle == null) continue;
+                List<DiscussBundle> list = rootDiscussBundle.getRepliedList();
                 if (list == null) {
                     list = new ArrayList<>();
                 }
                 list.add(discussBundle);
-                repliedMap.put(response.getDiscuss_id(), list);
+                rootDiscussBundle.setRepliedList(list);
             }
-        }
-        for (DiscussBundle discussBundle : commentList) {
-            getByRecursion(repliedMap, discussBundle);
         }
         return new BlogDetail(blogTable.getTitle(), blogTable.getBody(), commentList);
-    }
-
-    private void getByRecursion(Map<String, List<DiscussBundle>> map, DiscussBundle discussBundle) {
-        List<DiscussBundle> discussBundles = map.get(discussBundle.getDiscuss().getId());
-        if (discussBundles == null) return;
-        for (DiscussBundle bundle : discussBundles) {
-            List<DiscussBundle> repliedList = discussBundle.getRepliedList();
-            if (repliedList == null) {
-                discussBundle.setRepliedList(new ArrayList<>());
-            }
-            discussBundle.getRepliedList().add(bundle);
-            getByRecursion(map, bundle);
-        }
     }
 }
