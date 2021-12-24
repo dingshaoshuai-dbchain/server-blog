@@ -14,8 +14,6 @@ import cloud.dbchain.server.blog.table.BlogTable;
 import cloud.dbchain.server.blog.table.DiscussTable;
 import cloud.dbchain.server.blog.table.UserTable;
 import com.gcigb.dbchain.QueriedArray;
-import com.gcigb.dbchain.bean.result.DBChainQueryResult;
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.mysql.cj.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,15 +38,11 @@ public class BlogService {
 
     public BaseResponse getAll(byte[] privateKey, byte[] publicKey) {
         QueriedArray queriedArray = new QueriedArray("table", Blogs.tableName);
-        DBChainQueryResult result = tableDao.query(privateKey, publicKey, queriedArray);
-        if (!result.isSuccess()) {
+        List<Object> objects = tableDao.queryAndParse(privateKey, publicKey, queriedArray);
+        if (objects == null) {
             return new BaseResponse(CodeKt.CODE_FAILURE, "获取博客失败", null);
         }
-        Gson gson = new Gson();
-        Type type = new TypeToken<BaseDBChainResult<BlogTable>>() {
-        }.getType();
-        BaseDBChainResult<BlogTable> o = gson.fromJson(result.getContent(), type);
-        return new BaseResponse(CodeKt.CODE_SUCCESS, "成功", o.getResult());
+        return new BaseResponse(CodeKt.CODE_SUCCESS, "成功", objects);
     }
 
     public BaseResponse getBlogs(byte[] privateKey, byte[] publicKey, String title, String createdBy) {
@@ -59,29 +53,21 @@ public class BlogService {
         if (createdBy != null && createdBy.length() >= 1) {
             queriedArray.findEqual(Common.created_by, createdBy);
         }
-        DBChainQueryResult result = tableDao.query(privateKey, publicKey, queriedArray);
-        if (!result.isSuccess()) {
+        List<Object> objects = tableDao.queryAndParse(privateKey, publicKey, queriedArray);
+        if (objects == null) {
             return new BaseResponse(CodeKt.CODE_FAILURE, "获取博客失败", null);
         }
-        Gson gson = new Gson();
-        Type type = new TypeToken<BaseDBChainResult<BlogTable>>() {
-        }.getType();
-        BaseDBChainResult<BlogTable> o = gson.fromJson(result.getContent(), type);
-        return new BaseResponse(CodeKt.CODE_SUCCESS, "成功", o.getResult());
+        return new BaseResponse(CodeKt.CODE_SUCCESS, "成功", objects);
     }
 
     public BaseResponse getBlog(byte[] privateKey, byte[] publicKey, String id) {
         QueriedArray queriedArray = new QueriedArray("table", Blogs.tableName)
                 .findById(id);
-        DBChainQueryResult result = tableDao.query(privateKey, publicKey, queriedArray);
-        if (!result.isSuccess()) {
+        List<Object> objects = tableDao.queryAndParse(privateKey, publicKey, queriedArray);
+        if (objects == null) {
             return new BaseResponse(CodeKt.CODE_FAILURE, "获取博客失败", null);
         }
-        Gson gson = new Gson();
-        Type type = new TypeToken<BaseDBChainResult<BlogTable>>() {
-        }.getType();
-        BaseDBChainResult<BlogTable> o = gson.fromJson(result.getContent(), type);
-        return new BaseResponse(CodeKt.CODE_SUCCESS, "成功", o.getResult());
+        return new BaseResponse(CodeKt.CODE_SUCCESS, "成功", objects);
     }
 
     public BaseResponse publish(byte[] privateKey, byte[] publicKey, String address, Map<String, String> map) {
@@ -101,29 +87,26 @@ public class BlogService {
 
     }
 
-    public BlogDetail getBlogDetail(byte[] privateKey, byte[] publicKey, String blogId) {
+    public BaseResponse getBlogDetail(byte[] privateKey, byte[] publicKey, String blogId) {
         // 获取博客内容
         QueriedArray queriedArray = new QueriedArray("table", Blogs.tableName)
                 .findById(blogId);
-        String content = tableDao.query(privateKey, publicKey, queriedArray).getContent();
         Type type = new TypeToken<BaseDBChainResult<BlogTable>>() {
         }.getType();
-        Gson gson = new Gson();
-        BaseDBChainResult<BlogTable> blogTableResult = gson.fromJson(content, type);
-        List<BlogTable> result = blogTableResult.getResult();
-        if (result.isEmpty()) {
-            return null;
+        List<BlogTable> result = tableDao.queryAndParse(privateKey, publicKey, queriedArray, type);
+        if (result == null || result.isEmpty()) {
+            return new BaseResponse(CodeKt.CODE_FAILURE, "获取博客详情失败", null);
         }
-        BlogTable blogTable = result.get(0);
 
+        BlogTable blogTable = result.get(0);
         // 查出关于这条博客的所有评论及回复
         queriedArray = new QueriedArray("table", Discuss.tableName)
                 .findEqual(Discuss.blog_id, blogId);
-        content = tableDao.query(privateKey, publicKey, queriedArray).getContent();
+
         type = new TypeToken<BaseDBChainResult<DiscussTable>>() {
         }.getType();
-        BaseDBChainResult<DiscussTable> discussTableBaseResult = gson.fromJson(content, type);
-        List<DiscussTable> discussList = discussTableBaseResult.getResult();
+        List<DiscussTable> discussList = tableDao.queryAndParse(privateKey, publicKey, queriedArray, type);
+
         // 以每一条评论或者回复的 id 为 key，方便后期获取
         Map<String, DiscussResponse> discussMap = new HashMap<>();
         List<DiscussResponse> responseList = new ArrayList<>();
@@ -178,6 +161,7 @@ public class BlogService {
                 rootDiscussBundle.setRepliedList(list);
             }
         }
-        return new BlogDetail(blogTable.getTitle(), blogTable.getBody(), commentList);
+        BlogDetail detail = new BlogDetail(blogTable.getTitle(), blogTable.getBody(), commentList);
+        return new BaseResponse(CodeKt.CODE_SUCCESS, "成功", detail);
     }
 }

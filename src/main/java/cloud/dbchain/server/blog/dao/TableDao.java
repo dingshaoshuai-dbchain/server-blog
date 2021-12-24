@@ -1,10 +1,15 @@
 package cloud.dbchain.server.blog.dao;
 
+import cloud.dbchain.server.blog.BaseDBChainResult;
 import com.gcigb.dbchain.QueriedArray;
 import com.gcigb.dbchain.RestClientKt;
 import com.gcigb.dbchain.bean.result.DBChainQueryResult;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -20,5 +25,25 @@ public class TableDao {
 
     public DBChainQueryResult query(byte[] privateKey, byte[] publicKey, QueriedArray queriedArray) {
         return RestClientKt.querier(queriedArray, privateKey, publicKey);
+    }
+
+    public List<Object> queryAndParse(byte[] privateKey, byte[] publicKey, QueriedArray queriedArray) {
+        DBChainQueryResult result = RestClientKt.querier(queriedArray, privateKey, publicKey);
+        if (!result.isSuccess()) return null;
+        Gson gson = new Gson();
+        Type type = new TypeToken<BaseDBChainResult<Object>>() {
+        }.getType();
+        BaseDBChainResult<Object> o = gson.fromJson(result.getContent(), type);
+        if (o == null) return null;
+        return o.getResult();
+    }
+
+    public <T> List<T> queryAndParse(byte[] privateKey, byte[] publicKey, QueriedArray queriedArray, Type type) {
+        DBChainQueryResult result = RestClientKt.querier(queriedArray, privateKey, publicKey);
+        if (!result.isSuccess()) return null;
+        Gson gson = new Gson();
+        BaseDBChainResult<T> o = gson.fromJson(result.getContent(), type);
+        if (o == null) return null;
+        return o.getResult();
     }
 }

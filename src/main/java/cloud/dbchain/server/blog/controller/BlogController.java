@@ -3,7 +3,6 @@ package cloud.dbchain.server.blog.controller;
 import cloud.dbchain.server.blog.AdministratorKt;
 import cloud.dbchain.server.blog.BaseResponse;
 import cloud.dbchain.server.blog.bean.UserInfo;
-import cloud.dbchain.server.blog.bean.response.BlogDetail;
 import cloud.dbchain.server.blog.contast.Blogs;
 import cloud.dbchain.server.blog.contast.Common;
 import cloud.dbchain.server.blog.service.BlogService;
@@ -12,8 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import java.util.Map;
-
-import static cloud.dbchain.server.blog.contast.CodeKt.CODE_FAILURE;
 
 @RestController
 @RequestMapping("/blog")
@@ -90,7 +87,6 @@ public class BlogController {
      */
     @GetMapping("/getBlogDetail/{blog_id}")
     public BaseResponse getBlogDetail(@PathVariable("blog_id") String blogId) {
-        BlogDetail detail = blogService.getBlogDetail(AdministratorKt.privateKey, AdministratorKt.publicKey, blogId);
-        return new BaseResponse(200, "成功", detail);
+        return blogService.getBlogDetail(AdministratorKt.privateKey, AdministratorKt.publicKey, blogId);
     }
 }

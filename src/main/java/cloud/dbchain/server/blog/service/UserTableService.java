@@ -8,8 +8,6 @@ import com.gcigb.dbchain.FactoryKt;
 import com.gcigb.dbchain.QueriedArray;
 import com.gcigb.dbchain.RestClientKt;
 import com.gcigb.dbchain.bean.Message;
-import com.gcigb.dbchain.bean.result.DBChainQueryResult;
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -30,17 +28,11 @@ public class UserTableService {
     public UserTable getUser(byte[] privateKey, byte[] publicKey, String address) {
         QueriedArray queriedArray = new QueriedArray("table", User.tableName)
                 .findEqual("dbchain_key", address);
-        DBChainQueryResult result = tableDao.query(privateKey, publicKey, queriedArray);
-        if (!result.isSuccess()) return null;
-        String json = result.getContent();
-        Gson gson = new Gson();
         Type type = new TypeToken<BaseDBChainResult<UserTable>>() {
         }.getType();
-        BaseDBChainResult<UserTable> baseResult = gson.fromJson(json, type);
-        if (baseResult == null) return null;
-        List<UserTable> list = baseResult.getResult();
-        if (list == null || list.isEmpty()) return null;
-        return list.get(0);
+        List<UserTable> objects = tableDao.queryAndParse(privateKey, publicKey, queriedArray, type);
+        if (objects == null || objects.isEmpty()) return null;
+        return objects.get(0);
     }
 
     public boolean addUser(byte[] privateKey, byte[] publicKey, String address, Map<String, String> map) {
