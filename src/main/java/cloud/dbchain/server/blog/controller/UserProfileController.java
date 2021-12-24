@@ -33,14 +33,7 @@ public class UserProfileController {
      */
     @PostMapping("/modify")
     public BaseResponse modify(HttpSession session, @RequestBody Map<String, String> map) {
-        // 判断是否登录状态
-        if (session.isNew()) {
-            return new BaseResponse(CODE_FAILURE, "请先登录", null);
-        }
         UserInfo userInfo = (UserInfo) session.getAttribute(session.getId());
-        if (userInfo == null || userInfo.getPrivateKey().length <= 0) {
-            return new BaseResponse(CODE_FAILURE, "请先登录", null);
-        }
         byte[] privateKey = userInfo.getPrivateKey();
         byte[] publicKey = userInfo.getPublicKey33();
         String address = userInfo.getAddress();

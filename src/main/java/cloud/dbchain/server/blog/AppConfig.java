@@ -14,6 +14,7 @@ public class AppConfig implements WebMvcConfigurer {
                 .addPathPatterns("/blog/publish")
                 .addPathPatterns("/blog/discuss")
                 .addPathPatterns("/user/saveRecoverWord")
-                .addPathPatterns("/user/resetPasswordFromOld");
+                .addPathPatterns("/user/resetPasswordFromOld")
+                .addPathPatterns("/userProfile/modify");
     }
 }
