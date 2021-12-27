@@ -3,6 +3,7 @@ package cloud.dbchain.server.blog.controller;
 import cloud.dbchain.server.blog.BaseResponse;
 import cloud.dbchain.server.blog.bean.UserInfo;
 import cloud.dbchain.server.blog.contast.CodeKt;
+import cloud.dbchain.server.blog.contast.User;
 import cloud.dbchain.server.blog.service.UserTableService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,8 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
 import java.util.Map;
-
-import static cloud.dbchain.server.blog.contast.CodeKt.CODE_FAILURE;
 
 @RestController
 @RequestMapping("/userProfile")
@@ -27,8 +26,9 @@ public class UserProfileController {
 
     /**
      * 修改用户信息
+     *
      * @param session session
-     * @param map name,age,sex,status,photo,motto
+     * @param map     name,age,sex,status,photo,motto
      * @return 修改用户信息结果
      */
     @PostMapping("/modify")
@@ -38,7 +38,7 @@ public class UserProfileController {
         byte[] publicKey = userInfo.getPublicKey33();
         String address = userInfo.getAddress();
         // dbchain_key 不允许随意修改
-        map.put("dbchain_key", address);
+        map.put(User.dbchain_key, address);
 
         // 修改用户信息
         boolean result = userTableService.updateUser(privateKey, publicKey, address, map);

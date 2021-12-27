@@ -2,6 +2,7 @@ package cloud.dbchain.server.blog.controller;
 
 import cloud.dbchain.server.blog.BaseResponse;
 import cloud.dbchain.server.blog.bean.UserInfo;
+import cloud.dbchain.server.blog.contast.User;
 import cloud.dbchain.server.blog.service.KeyEscrowService;
 import cloud.dbchain.server.blog.service.UserPasswordService;
 import cloud.dbchain.server.blog.service.UserTableService;
@@ -46,6 +47,7 @@ public class UserController {
 
     /**
      * 注册
+     *
      * @param map userName,password
      * @return 注册结果
      */
@@ -83,13 +85,13 @@ public class UserController {
         }
         // 往用户表插入数据
         Map<String, String> user = new HashMap<>();
-        user.put("name", "用户" + userName);
-        user.put("age", "0");
-        user.put("dbchain_key", address);
-        user.put("sex", "男");
-        user.put("status", "");
-        user.put("photo", "");
-        user.put("motto", "");
+        user.put(User.name, "用户" + userName);
+        user.put(User.age, "0");
+        user.put(User.dbchain_key, address);
+        user.put(User.sex, "男");
+        user.put(User.status, "");
+        user.put(User.photo, "");
+        user.put(User.motto, "");
         boolean addUser = userTableService.addUser(privateKey, publicKey, address, user);
         if (!addUser) {
             return new BaseResponse(CODE_FAILURE, "插入用户表失败", null);
@@ -101,6 +103,7 @@ public class UserController {
 
     /**
      * 登录
+     *
      * @param request request
      * @param map     userName,password
      * @return 登录结果
@@ -140,7 +143,8 @@ public class UserController {
 
     /**
      * 保存恢复码
-     * @param session session
+     *
+     * @param session     session
      * @param recoverWord recoverWord
      * @return 保存恢复码结果
      */
@@ -161,6 +165,7 @@ public class UserController {
 
     /**
      * 重置密码 - 从恢复码
+     *
      * @param map userName,recoverWord,newPassword
      * @return 重置密码结果
      */
@@ -186,6 +191,7 @@ public class UserController {
 
     /**
      * 重置密码 - 从老密码
+     *
      * @param session session
      * @param map     oldPassword,newPassword
      * @return 重置密码结果

@@ -27,7 +27,7 @@ public class UserTableService {
 
     public UserTable getUser(byte[] privateKey, byte[] publicKey, String address) {
         QueriedArray queriedArray = new QueriedArray("table", User.tableName)
-                .findEqual("dbchain_key", address);
+                .findEqual(User.dbchain_key, address);
         Type type = new TypeToken<BaseDBChainResult<UserTable>>() {
         }.getType();
         List<UserTable> objects = tableDao.queryAndParse(privateKey, publicKey, queriedArray, type);
