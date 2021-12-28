@@ -44,7 +44,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     private void writeNotLogin(HttpServletResponse response) throws IOException {
         PrintWriter writer = response.getWriter();
-        BaseResponse baseResponse = new BaseResponse(CodeKt.CODE_FAILURE, "Not Login", null);
+        BaseResponse baseResponse = new BaseResponse(CodeKt.CODE_NOT_LOGIN, "Not Login", null);
         writer.write(JsonKtxKt.toJsonString(baseResponse));
         writer.flush();
     }
